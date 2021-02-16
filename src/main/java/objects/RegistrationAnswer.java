@@ -6,11 +6,12 @@ import lombok.Data;
 
 @Data
 @Builder
-public class Support {
+public class RegistrationAnswer {
     @Expose
-    String url;
+    int id;
     @Expose
-    String support;
+    String token;
     @Expose
-    String text;
+    String error;
+
 }

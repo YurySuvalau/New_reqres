@@ -7,7 +7,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class ListResource {
+public class ListData {
     @Expose
     int page;
     @SerializedName("per_page")
@@ -19,6 +19,6 @@ public class ListResource {
     @Expose
     int totalPages;
     @Expose
-    List<Resource> data;
+    List<UsersData> data;
     Support support;
 }

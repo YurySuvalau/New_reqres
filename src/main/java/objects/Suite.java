@@ -15,4 +15,8 @@ public class Suite {
     String email;
     @Expose
     String password;
+//    @Expose
+//    int id;
+//    @Expose
+//    String createdAt;
 }

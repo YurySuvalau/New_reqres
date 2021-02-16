@@ -2,12 +2,15 @@ package tests;
 
 import adaptesrs.ReqresAdapter;
 import com.google.gson.Gson;
+
+import io.restassured.response.Response;
 import lombok.Data;
 import objects.*;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import static io.restassured.RestAssured.given;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 
 @Data
 public class Reqres {
@@ -26,158 +29,148 @@ public class Reqres {
     public String name = "morpheus";
     public String job = "leader";
     public String jobUpdate = "zion resident";
+    public String regEmail = "eve.holt@reqres.in";
+    public String regPassword = "pistol";
+    public String regUnsuccessfulEmail = "sydney@fife";
+    public String loginEmail = "eve.holt@reqres.in";
+    public String loginPassword = "cityslicka";
+    public String loginUnsuccessfulEmail = "peter@klaven";
 
-    @Test
-    public void listUserIdTest() {
-        String body = given()
-                .when()
-                .get(URL + LIST_USERS)
-                .then()
-                .extract().body().asString();
-        UsersList listUser = new Gson().fromJson(body, UsersList.class);
-        int id = listUser.getData().get(1).getId();
-        Assert.assertEquals(id, 8);
+    Gson converter = new Gson();
+
+    @Test(description = "Test of users list")
+    public void listUserIdTest() throws FileNotFoundException {
+        ListData expectedList = converter.fromJson(new FileReader("src/test/java/resources/usersList.json"), ListData.class);
+        String suiteFromResponse = new ReqresAdapter().get(LIST_USERS, 200);
+        ListData actualResult = converter.fromJson(suiteFromResponse, ListData.class);
+        Assert.assertEquals(actualResult, expectedList);
     }
 
-    @Test
-    public void singleUserResponseTest() {
-        given()
-                .when()
-                .get(URL + SINGLE_USER)
-                .then()
-                .statusCode(200);
+    @Test(description = "Test of single user")
+    public void singleUserResponseTest() throws FileNotFoundException {
+        UsersData expectedList = converter.fromJson(new FileReader("src/test/java/resources/singleUser.json"), UsersData.class);
+        String suiteFromResponse = new ReqresAdapter().get(SINGLE_USER, 200);
+        UsersData actualResult = converter.fromJson(suiteFromResponse, UsersData.class);
+        Assert.assertEquals(actualResult, expectedList);
     }
 
-    @Test
+    @Test(description = "Single user is not found test")
     public void singleUserNotFoundError() {
-        given()
-                .when()
-                .get(URL + SINGLE_USER_NOT_FOUND)
-                .then()
-                .statusCode(404);
+        new ReqresAdapter().get(SINGLE_USER_NOT_FOUND, 404);
     }
 
-    @Test
-    public void listResourceTest() {
-        String body = given()
-                .when()
-                .get(URL + LIST_RESOURCE)
-                .then()
-                .extract().body().asString();
-        ListResource res = new Gson().fromJson(body, ListResource.class);
-        String pantoneValue = res.getData().get(4).getPantoneValue();
-        Assert.assertEquals(pantoneValue, "17-1456");
+    @Test(description = "Resource list test")
+    public void listResourceTest() throws FileNotFoundException {
+        ListResource expectedList = converter.fromJson(new FileReader("src/test/java/resources/resourceList.json"), ListResource.class);
+        String suiteFromResponse = new ReqresAdapter().get(LIST_RESOURCE, 200);
+        ListResource actualResult = converter.fromJson(suiteFromResponse, ListResource.class);
+        Assert.assertEquals(actualResult, expectedList);
     }
 
-    @Test
-    public void singleResourceTest() {
-        String body = given()
-                .when()
-                .get(URL + SINGLE_RESOURCE)
-                .then()
-                .extract().body().asString();
-        SingleResource name = new Gson().fromJson(body, SingleResource.class);
-        String singleName = name.getData().getName();
-        Assert.assertEquals(singleName, "fuchsia rose");
+    @Test(description = "Single resource test")
+    public void singleResourceTest() throws FileNotFoundException {
+        Resource expectedList = converter.fromJson(new FileReader("src/test/java/resources/singleResource.json"), Resource.class);
+        String suiteFromResponse = new ReqresAdapter().get(SINGLE_RESOURCE, 200);
+        Resource actualResult = converter.fromJson(suiteFromResponse, Resource.class);
+        Assert.assertEquals(actualResult, expectedList);
     }
 
-    @Test
+    @Test(description = "Resource not found test")
     public void singleResourceNotFoundTest() {
         new ReqresAdapter().get(SINGLE_RESOURCE_404, 404);
     }
 
-    @Test
+    @Test(description = "Create test")
     public void createPostTest() {
+        Suite expectedResult = converter.fromJson("{\n" +
+                "    \"name\": \"morpheus\",\n" +
+                "    \"job\": \"leader\"\n" +
+                "}", Suite.class);
         Suite suite = Suite.builder()
                 .name(name)
                 .job(job)
                 .build();
-        String actualResult = new ReqresAdapter().post(CREATE, "{\n" +
-                "    \"name\": \"" + name + "\",\n" +
-                "    \"job\": \"" + job + "\"\n" +
-                "}", 201).getBody().jsonPath().getJsonObject("name");
-        Assert.assertEquals(actualResult, name);
+        Response suiteFromResponse = new ReqresAdapter().post(CREATE, converter.toJson(suite), 201);
+        Suite actualResult = converter.fromJson(suiteFromResponse.asString(), Suite.class);
+        Assert.assertEquals(actualResult, expectedResult);
     }
 
-    @Test
+    @Test(description = "Put test")
     public void putTest() {
         Suite suite = Suite.builder()
                 .name(name)
                 .job(jobUpdate)
                 .build();
-        String actualResult = new ReqresAdapter().put(PUT, "{\n" +
-                "    \"name\": \"" + name + "\",\n" +
-                "    \"job\": \"" + jobUpdate + "\"\n" +
-                "}", 200).getBody().jsonPath().getJsonObject("name");
-        Assert.assertEquals(actualResult, name);
+        Response suiteFromResponse = new ReqresAdapter().put(PUT, converter.toJson(suite), 200);
+        Suite actualResult = converter.fromJson(suiteFromResponse.asString(), Suite.class);
+        Assert.assertEquals(actualResult, suite);
     }
 
-    @Test
+    @Test(description = "Delete test")
     public void deleteTest() {
-        Suite suite = Suite.builder()
-                .name(name)
-                .job(job)
-                .build();
-        new ReqresAdapter().post(CREATE, "{\n" +
-                "    \"name\": \"" + name + "\",\n" +
-                "    \"job\": \"" + job + "\"\n" +
-                "}", 201);
         new ReqresAdapter().delete(PUT, 204);
     }
 
-    @Test
+    @Test(description = "Registration successful test")
     public void registerSuccessfulTest() {
+        RegistrationAnswer expectedAnswer = converter.fromJson("{\n" +
+                "    \"id\": 4,\n" +
+                "    \"token\": \"QpwL5tke4Pnpja7X4\"\n" +
+                "}", RegistrationAnswer.class);
         Suite suite = Suite.builder()
-                .email("eve.holt@reqres.in")
-                .password("pistol")
+                .email(regEmail)
+                .password(regPassword)
                 .build();
-        int actualResult = new ReqresAdapter().post(REGISTER_SUCCESSFUL, "{\n" +
-                "    \"email\": \"eve.holt@reqres.in\",\n" +
-                "    \"password\": \"pistol\"\n" +
-                "}", 200).getBody().jsonPath().getJsonObject("id");
-        Assert.assertEquals(actualResult, 4);
+        Response suiteFromResponse = new ReqresAdapter().post(REGISTER_SUCCESSFUL, converter.toJson(suite), 200);
+        RegistrationAnswer actualResult = converter.fromJson(suiteFromResponse.asString(), RegistrationAnswer.class);
+        Assert.assertEquals(actualResult, expectedAnswer);
     }
 
-    @Test
+    @Test(description = "Registration unsuccessful test")
     public void registerUnsuccessfulTest() {
+        RegistrationAnswer expectedAnswer = converter.fromJson("{\n" +
+                "    \"error\": \"Missing password\"\n" +
+                "}", RegistrationAnswer.class);
         Suite suite = Suite.builder()
-                .email("sydney@fife")
+                .email(regUnsuccessfulEmail)
                 .build();
-        String actualResult = new ReqresAdapter().post(REGISTER_SUCCESSFUL, "{\n" +
-                "    \"email\": \"sydney@fife\"\n" +
-                "}", 400).getBody().jsonPath().getJsonObject("error");
-        Assert.assertEquals(actualResult, "Missing password");
+        Response suiteFromResponse = new ReqresAdapter().post(REGISTER_SUCCESSFUL, converter.toJson(suite), 400);
+        RegistrationAnswer actualResult = converter.fromJson(suiteFromResponse.asString(), RegistrationAnswer.class);
+        Assert.assertEquals(actualResult, expectedAnswer);
     }
 
-    @Test
+    @Test(description = "Login successful test")
     public void loginTest() {
+        RegistrationAnswer expectedAnswer = converter.fromJson("{\n" +
+                "    \"token\": \"QpwL5tke4Pnpja7X4\"\n" +
+                "}", RegistrationAnswer.class);
         Suite suite = Suite.builder()
-                .email("eve.holt@reqres.in")
-                .password("cityslicka")
+                .email(regEmail)
+                .password(regPassword)
                 .build();
-        String actualResult = new ReqresAdapter().post(LOGIN, "{\n" +
-                "    \"email\": \"eve.holt@reqres.in\",\n" +
-                "    \"password\": \"cityslicka\"\n" +
-                "}", 200).getBody().jsonPath().getJsonObject("token");
-        Assert.assertEquals(actualResult, "QpwL5tke4Pnpja7X4");
+        Response suiteFromResponse = new ReqresAdapter().post(LOGIN, converter.toJson(suite), 200);
+        RegistrationAnswer actualResult = converter.fromJson(suiteFromResponse.asString(), RegistrationAnswer.class);
+        Assert.assertEquals(actualResult, expectedAnswer);
     }
 
-    @Test
+    @Test(description = "Login unsuccessful test")
     public void loginUnsuccessfulTest() {
+        RegistrationAnswer expectedAnswer = converter.fromJson("{\n" +
+                "    \"error\": \"Missing password\"\n" +
+                "}", RegistrationAnswer.class);
         Suite suite = Suite.builder()
-                .email("peter@klaven")
+                .email(loginUnsuccessfulEmail)
                 .build();
-        String actualResult = new ReqresAdapter().post(LOGIN, "{\n" +
-                "    \"email\": \"peter@klaven\"\n" +
-                "}", 400).getBody().jsonPath().getJsonObject("error");
-        Assert.assertEquals(actualResult, "Missing password");
+        Response suiteFromResponse = new ReqresAdapter().post(LOGIN, converter.toJson(suite), 400);
+        RegistrationAnswer actualResult = converter.fromJson(suiteFromResponse.asString(), RegistrationAnswer.class);
+        Assert.assertEquals(actualResult, expectedAnswer);
     }
 
-    @Test
-    public void delayedTest() {
-        String body = new ReqresAdapter().get(DELAYED, 200);
-        UsersList list = new Gson().fromJson(body, UsersList.class);
-        int actualResult = list.getData().get(0).getId();
-        Assert.assertEquals(actualResult, 1);
+    @Test(description = "Delayed test")
+    public void delayedTest() throws FileNotFoundException {
+        UserData expectedList = converter.fromJson(new FileReader("src/test/java/resources/delayExpectedList.json"), UserData.class);
+        String suiteFromResponse = new ReqresAdapter().get(DELAYED, 200);
+        UserData actualResult = converter.fromJson(suiteFromResponse, UserData.class);
+        Assert.assertEquals(actualResult, expectedList);
     }
 }

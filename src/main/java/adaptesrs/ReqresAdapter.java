@@ -52,7 +52,7 @@ public class ReqresAdapter {
                 .extract().response();
     }
 
-    public Response patch(String url) {
+    public Response patch(String url,String body, int statusCode) {
         return given()
                 .header("Content-Type", "application/json")
                 .when()

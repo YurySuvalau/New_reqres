@@ -7,4 +7,6 @@ import lombok.Data;
 public class SingleResource {
     @Expose
     Resource data;
+    @Expose
+    Support support;
 }
