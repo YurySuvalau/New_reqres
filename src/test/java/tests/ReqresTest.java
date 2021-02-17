@@ -13,7 +13,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 
 @Data
-public class Reqres {
+public class ReqresTest {
     public static final String URL = "https://reqres.in";
     public static final String LIST_USERS = "/api/users?page=2";
     public static final String SINGLE_USER = "/api/users/2";
@@ -78,6 +78,11 @@ public class Reqres {
     @Test(description = "Resource not found test")
     public void singleResourceNotFoundTest() {
         new ReqresAdapter().get(SINGLE_RESOURCE_404, 404);
+    }
+
+    @Test(description = "Delete test")
+    public void sinleUserDeleteTest() {
+        new ReqresAdapter().delete(SINGLE_USER, 204);
     }
 
     @Test(description = "Create test")
