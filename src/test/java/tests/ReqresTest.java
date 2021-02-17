@@ -3,38 +3,19 @@ package tests;
 import adaptesrs.ReqresAdapter;
 import com.google.gson.Gson;
 
+import constants.Constants;
 import io.restassured.response.Response;
 import lombok.Data;
 import objects.*;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import test_constants.TestConstants;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 
 @Data
-public class ReqresTest {
-    public static final String URL = "https://reqres.in";
-    public static final String LIST_USERS = "/api/users?page=2";
-    public static final String SINGLE_USER = "/api/users/2";
-    public static final String SINGLE_USER_NOT_FOUND = "/api/users/23";
-    public static final String LIST_RESOURCE = "/api/unknown";
-    public static final String SINGLE_RESOURCE = "/api/unknown/2";
-    public static final String SINGLE_RESOURCE_404 = "/api/unknown/23";
-    public static final String CREATE = "/api/users";
-    public static final String PUT = "/api/users/2";
-    public static final String REGISTER_SUCCESSFUL = "/api/register";
-    public static final String LOGIN = "/api/login";
-    public static final String DELAYED = "/api/users?delay=3";
-    public String name = "morpheus";
-    public String job = "leader";
-    public String jobUpdate = "zion resident";
-    public String regEmail = "eve.holt@reqres.in";
-    public String regPassword = "pistol";
-    public String regUnsuccessfulEmail = "sydney@fife";
-    public String loginEmail = "eve.holt@reqres.in";
-    public String loginPassword = "cityslicka";
-    public String loginUnsuccessfulEmail = "peter@klaven";
+public class ReqresTest implements TestConstants, Constants {
 
     Gson converter = new Gson();
 
@@ -150,8 +131,8 @@ public class ReqresTest {
                 "    \"token\": \"QpwL5tke4Pnpja7X4\"\n" +
                 "}", RegistrationAnswer.class);
         Suite suite = Suite.builder()
-                .email(regEmail)
-                .password(regPassword)
+                .email(loginEmail)
+                .password(loginPassword)
                 .build();
         Response suiteFromResponse = new ReqresAdapter().post(LOGIN, converter.toJson(suite), 200);
         RegistrationAnswer actualResult = converter.fromJson(suiteFromResponse.asString(), RegistrationAnswer.class);
